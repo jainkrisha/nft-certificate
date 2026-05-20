@@ -24,13 +24,40 @@ Built and tested on **Base Sepolia Testnet**.
 | 🔢 **How It Works** | 4-step card grid: Connect → Sign In → Claim → Mint (with arrow connectors on desktop) |
 | 🦶 **Footer** | Brand · copyright · GitHub / Docs / Discord links |
 
+### ✅ UGF Gasless Transaction Layer (`@tychilabs/ugf-testnet-js`)
+
+**`lib/ugf.ts`** — thin, typed wrapper around the official UGF testnet SDK.
+
+| Export | Purpose |
+|---|---|
+| `sendGaslessTx()` | Runs the full UGF lifecycle: **quote → settle → execute** → returns `userTxHash` |
+| `mintCertificateGasless()` | Encodes `safeMint(recipient)` calldata and fires a complete gasless NFT mint |
+| `buildTxObject()` | Builds the `tx_object` JSON for `quote.get` |
+| `encodeSafeMint()` | Returns `0x4e6ec247…` ABI-encoded `safeMint(address)` calldata |
+| `ugfAuthenticate()` | EIP-191 wallet signature → JWT |
+| `getInjectedSigner()` | `BrowserProvider`-backed signer from MetaMask |
+| `BASE_SEPOLIA_CHAIN_ID` | Re-exported: `"84532"` |
+| `TYI_USD_PAYMENT_COIN` | Re-exported: `"TYI_MOCK_USD"` |
+
+**UGF lifecycle steps** (all wired in `sendGaslessTx`):
+
+```
+1. auth.login  — EIP-191 sig → JWT
+2. quote.get   — price destination action → digest + TYI settlement_amount
+3. payment.x402.execute — ERC-3009 typed-data sig → UGF pulls TYI_MOCK_USD from wallet
+4. chains.evm.sponsorAndExecute — UGF provides sponsored ETH, sends tx → userTxHash
+```
+
+Errors are normalised with `[UGF <code>]` prefix so the UI surfaces the failing stage.
+
 ### ✅ MetaMask Wallet Connection (ethers.js v6)
 
-- `WalletContext` — React Context + `useWallet()` hook  
-- `WalletProvider` — server-safe, re-subscribes on unmount/remount  
-- **Connect** — `eth_requestAccounts` via `BrowserProvider`  
-- **Disconnect** — resets address, balance, and network state  
-- **Real-time account listener** — listens to `accountsChanged`; re-fetches balance automatically on account switch  
+- `WalletContext` — React Context + `useWallet()` hook
+- `WalletProvider` — server-safe, re-subscribes on unmount/remount
+- **Connect** — `eth_requestAccounts` via `BrowserProvider`
+- **Disconnect** — resets address, balance, network state, and tx state
+- **`claimCertificate()`** — reads `NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS`, encodes `safeMint(userAddress)` calldata, runs `sendGaslessTx` end-to-end; callers pass an `onHash` callback to receive the confirmed `userTxHash`
+- **Real-time account listener** — listens to `accountsChanged`; re-fetches balance automatically on account switch
 - **Truncated address display** — e.g. `0x1a2b…9f8e`
 
 ### ✅ Base Sepolia Network Configuration
@@ -55,6 +82,9 @@ app/
     ├── HowItWorks.tsx          # How it Works grid + StepCard helper
     ├── Footer.tsx              # Site footer
     └── WalletContext.tsx        # WalletProvider + useWallet hook
+
+lib/
+└── ugf.ts                     # UGF SDK integration layer (auth / quote / settle / execute)
 ```
 
 - `FeatureCard` and `StepCard` are **internal helpers** co-located in their rendering file (not exported)  
@@ -103,6 +133,23 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
+## 🔐 Environment Variables
+
+Create a `.env.local` (generated from `.env.example`) before running gasless features:
+
+```bash
+# Contract address of the Certificate NFT (ERC-721) deployed on Base Sepolia
+NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS=0xYourContractAddress
+```
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS` | ✅ for minting | ERC-721 address used by `claimCertificate()` |
+
+> `.env.local` is git-ignored. `.env.example` contains only the variable name — **do not commit secrets**.
+
+---
+
 ## 🦊 MetaMask Setup
 
 1. Install the [MetaMask browser extension](https://metamask.io/download/)  
@@ -124,6 +171,18 @@ Students need SEP ETH gas for standard on-chain operations (not required for cer
 ## 🗺 Changelog / Future Updates
 
 > This section is maintained as the project evolves.
+
+### v0.2.0 — 🔥 UGF Gasless Layer
+_2026-05-20_
+
+- Installed `@tychilabs/ugf-testnet-js` (v0.1.3) — Base Sepolia testnet SDK
+- `lib/ugf.ts` — typed integration layer: `sendGaslessTx`, `mintCertificateGasless`, `buildTxObject`, `encodeSafeMint`, `ugfAuthenticate`
+- `WalletContext` — `claimCertificate()` method; reads `NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS`, encodes `safeMint(userAddress)`, runs full UGF lifecycle, surfaces `[UGF <code>]` errors
+- `WalletContext` — `sendGaslessTx()` generic method for arbitrary destination calls
+- `WalletContext` — `txPending` + `lastTxHash` state; `txPending` blocks wallet buttons while a gasless flow is in progress; `lastTxHash` available to callers via `onHash` callback
+- Error normalisation — `UGFError` subclasses map to plain `Error` with `[UGF <code>]` prefix
+- `BASE_SEPOLIA_CHAIN_ID` / `TYI_USD_PAYMENT_COIN` re-exported from `@tychilabs/ugf-testnet-js`
+- `.env.example` created; `NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS` documented
 
 ### v0.1.0 — 🚀 Initial Release
 _2026-05-20_
