@@ -1,36 +1,154 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gasless NFT Certificates
 
-## Getting Started
+> Claim academic certificates as verifiable NFTs on Base Sepolia with **zero gas fees** — powered by the [User Gasless Fund (UGF)](https://docs.base.org/base-sepolia).
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📌 Overview
+
+**UGF NFT Certificate** is a Next.js dApp that lets students mint and claim their graduation certificates as ERC-721 NFTs on-chain. Transactions are **fully gasless** — students never need to hold ETH. Institutions (oracles) issue credentials directly into student wallets through UGF-sponsored transactions.
+
+Built and tested on **Base Sepolia Testnet**.
+
+---
+
+## ✨ What's Implemented
+
+### ✅ Landing Page
+
+| Section | Description |
+|---|---|
+| ⚡ **Navbar** | Logo · Connect Wallet button (switches to truncated address + Disconnect after connecting) |
+| 🎯 **Hero** | "Gasless NFT Certificates" gradient heading · live badge · description · 2 CTAs |
+| 🧩 **Features** | 3 cards — NFT Minting · Gasless Transactions with UGF · Base Sepolia Testnet |
+| 🔢 **How It Works** | 4-step card grid: Connect → Sign In → Claim → Mint (with arrow connectors on desktop) |
+| 🦶 **Footer** | Brand · copyright · GitHub / Docs / Discord links |
+
+### ✅ MetaMask Wallet Connection (ethers.js v6)
+
+- `WalletContext` — React Context + `useWallet()` hook  
+- `WalletProvider` — server-safe, re-subscribes on unmount/remount  
+- **Connect** — `eth_requestAccounts` via `BrowserProvider`  
+- **Disconnect** — resets address, balance, and network state  
+- **Real-time account listener** — listens to `accountsChanged`; re-fetches balance automatically on account switch  
+- **Truncated address display** — e.g. `0x1a2b…9f8e`
+
+### ✅ Base Sepolia Network Configuration
+
+- `BASE_SEPOLIA` constant — chain ID `0x14a34` (84532), RPC, block explorer  
+- `wallet_switchEthereumChain` — attempts chain switch first  
+- `wallet_addEthereumChain` — falls back if `4902` (chain not added) is thrown; then re-fetches balance  
+- **Wrong-network alert banner** (amber pill in navbar) — shown when connected wallet is on an unsupported network  
+- Network is **validated on connect** and on every `accountsChanged` event
+
+### ✅ Project Structure — Component Library
+
+```
+app/
+├── page.tsx                    # Composition entry-point
+├── layout.tsx                  # Root layout · Wraps children with WalletProvider
+└── components/
+    ├── index.ts                # Barrel exports
+    ├── Navbar.tsx              # Navigation + wallet button + network alert
+    ├── Hero.tsx                # Hero section
+    ├── Features.tsx            # Features grid + FeatureCard helper
+    ├── HowItWorks.tsx          # How it Works grid + StepCard helper
+    ├── Footer.tsx              # Site footer
+    └── WalletContext.tsx        # WalletProvider + useWallet hook
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `FeatureCard` and `StepCard` are **internal helpers** co-located in their rendering file (not exported)  
+- Barrel index pattern makes imports a single line in `page.tsx`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### ✅ CI & Type Safety
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Check | Status |
+|---|---|
+| ESLint (`npm run lint`) | ✅ Passes (0 warnings) |
+| TypeScript (`next build`) | ✅ Passes (0 errors) |
+| Production build | ✅ Static pages generated |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠 Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Layer | Tech |
+|---|---|
+| **Framework** | Next.js 16.2 (App Router) |
+| **Language** | TypeScript 5 |
+| **Styling** | Tailwind CSS v4 |
+| **Blockchain** | ethers.js v6 |
+| **Network** | Base Sepolia Testnet (chain ID `84532`) |
+| **Wallet** | MetaMask (EVM-compatible) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## ⚡ Quick Start
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Install dependencies
+npm install
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Run the development server
+npm run dev
+
+# Lint
+npm run lint
+
+# Build for production
+npm run build
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 🦊 MetaMask Setup
+
+1. Install the [MetaMask browser extension](https://metamask.io/download/)  
+2. Click **Connect Wallet** in the navbar  
+3. If prompted, approve the connection in MetaMask  
+4. If you're on the wrong network, an amber warning appears — click **Switch Network**
+
+---
+
+## 🔗 Base Sepolia Faucet
+
+Students need SEP ETH gas for standard on-chain operations (not required for certificate minting since UGF covers it):
+
+- [Base Sepolia Faucet](https://docs.base.org/network-information)
+- [Sepolia Faucet (NAV)](https://sepoliafaucet.com/)
+
+---
+
+## 🗺 Changelog / Future Updates
+
+> This section is maintained as the project evolves.
+
+### v0.1.0 — 🚀 Initial Release
+_2026-05-20_
+
+- Next.js 16 landing page with all 5 sections
+- MetaMask integration via ethers.js v6
+- Wallet context provider (`WalletProvider`) + `useWallet()` hook
+- `wrongNetwork` detection and `wallet_switchEthereumChain` flow
+- Wrong-network amber alert banner in navbar
+- Component library: `Navbar`, `Hero`, `Features`, `HowItWorks`, `Footer`
+- Reusable `WalletContext` with ambient `window.ethereum` type augmentation
+- ESLint-clean, TypeScript-clean, production build passing
+
+### 🔜 Planned / In Progress
+
+| Item | Status |
+|---|---|
+| UGF gasless transaction flow (`UserOperation` / `EntryPoint`) | ⏳ Not started |
+| Smart contract integration (NFT minting, oracle claims) | ⏳ Not started |
+| SIWE (Sign-in with Ethereum) authentication | ⏳ Not started |
+| Certificate claim UI + fetch from on-chain | ⏳ Not started |
+| Loading / error skeletons | ⏳ Not started |
+| Toast notifications | ⏳ Not started |
+| Environment variables for RPC / contract addresses | ⏳ Not started |
+
+---
+
+_Last updated: 2026-05-20_
