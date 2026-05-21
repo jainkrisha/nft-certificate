@@ -8,9 +8,9 @@ import { encodeSafeMint, buildTxObject, BASE_SEPOLIA_CHAIN_ID, TYI_USD_PAYMENT_C
  * ═══════════════════════════════════════════════════════════════════════ */
 
 describe("encodeSafeMint", () => {
-  it("starts with the safeMint(address) 4-byte selector (0x4e6ec247)", () => {
+  it("starts with the safeMint(address) 4-byte selector (0x40d097c3)", () => {
     const result = encodeSafeMint("0x1234567890abcdef1234567890abcdef12345678");
-    expect(result.startsWith("0x4e6ec247")).toBe(true);
+    expect(result.startsWith("0x40d097c3")).toBe(true);
   });
 
   it("produces a 74-character hex string (0x + 4-byte selector + 64-char padded address)", () => {

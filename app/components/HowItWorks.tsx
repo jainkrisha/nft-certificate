@@ -6,8 +6,8 @@ const steps = [
     detail: "Link your MetaMask or any compatible wallet to get started in seconds.",
   },
   {
-    title: "Sign In",
-    detail: "Sign a SIWE message to verify your identity securely without sharing secrets.",
+  title: "Authorize",
+  detail: "Sign a message to authenticate with UGF. No passwords, no ETH — just your wallet signature.",
   },
   {
     title: "Claim",

@@ -2,7 +2,7 @@ import { BrowserProvider, Signer } from "ethers";
 import { BASE_SEPOLIA_CHAIN_ID, TYI_USD_PAYMENT_COIN, UGFClient, type QuoteResponse } from "@tychilabs/ugf-testnet-js";
 
 /* ══ Gateway defaults ═══════════════════════════════════════════════════ */
-const UGF_GATEWAY_URL = "https://api.ugf.tychilabs.com";
+const UGF_GATEWAY_URL = "https://gateway.universalgasframework.com";
 
 /* ══ Singleton UGF client ═══════════════════════════════════════════════ */
 let _ugfClient: UGFClient | null = null;
@@ -28,7 +28,7 @@ export type CertificateMintRequest = {
 
 /** Encode `safeMint(address)` calldata. */
 export function encodeSafeMint(toAddress: `0x${string}`): string {
-  return "0x4e6ec247" + toAddress.replace(/^0x/, "").padStart(64, "0");
+  return "0x40d097c3" + toAddress.replace(/^0x/, "").padStart(64, "0");
 }
 
 /** Build the `tx_object` JSON string UGF's `/quote` expects. */
@@ -80,6 +80,8 @@ export async function sendGaslessTx(params: {
       dest_chain_id: destChainId ?? BASE_SEPOLIA_CHAIN_ID,
       dest_chain_type: destChainType ?? "evm",
       payment_coin: paymentCoin ?? TYI_USD_PAYMENT_COIN,
+      payment_chain: BASE_SEPOLIA_CHAIN_ID,
+      payment_chain_type: "evm",
     });
 
     // ── 3. Settle (ERC-3009 / x402) ───────────────────────────────────

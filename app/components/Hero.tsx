@@ -1,6 +1,20 @@
 "use client";
 
+import { useWallet } from "./WalletContext";
+
 export function Hero() {
+  const {
+    address,
+    truncatedAddress,
+    isConnecting,
+    txPending,
+    lastTxHash,
+    wrongNetwork,
+    connect,
+    switchNetwork,
+    claimCertificate,
+  } = useWallet();
+
   return (
     <section className="relative overflow-hidden">
       <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[180px] pointer-events-none" />
@@ -31,23 +45,59 @@ export function Hero() {
           gasless onboarding on Base Sepolia.
         </p>
 
+        {wrongNetwork && (
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-400">
+            Wrong network detected.{" "}
+            <button
+              onClick={switchNetwork}
+              className="underline hover:text-amber-300"
+            >
+              Switch to Base Sepolia
+            </button>
+          </div>
+        )}
+
+        {lastTxHash && (
+          <div className="mt-6 inline-flex flex-col items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-4 text-sm text-emerald-400">
+            <span className="text-lg">Certificate Claimed!</span>
+            <a
+              href={"https://sepolia.basescan.org/tx/" + lastTxHash}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-emerald-300 break-all"
+            >
+              View on BaseScan
+            </a>
+          </div>
+        )}
+
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <button
-            className="flex items-center gap-2.5 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:bg-indigo-500 active:scale-[0.97]"
-            aria-label="Connect wallet to get started"
-          >
-            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
-            </svg>
-            Connect Wallet
-          </button>
-          <button
-            className="rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-medium text-zinc-300 transition hover:border-white/25 hover:bg-white/10 active:scale-[0.97]"
-            aria-label="Read the documentation"
-          >
+          {!address ? (
+            <button
+              onClick={connect}
+              disabled={isConnecting}
+              className="flex items-center gap-2.5 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:bg-indigo-500 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isConnecting ? "Connecting..." : "Connect Wallet"}
+            </button>
+          ) : (
+            <button
+              onClick={() => claimCertificate()}
+              disabled={txPending || wrongNetwork}
+              className="flex items-center gap-2.5 rounded-full bg-indigo-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:bg-indigo-500 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {txPending ? "Claiming... (~15s)" : ("Claim Certificate " + truncatedAddress)}
+            </button>
+          )}
+
+          <button className="rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-medium text-zinc-300 transition hover:border-white/25 hover:bg-white/10 active:scale-[0.97]">
             Documentation
           </button>
         </div>
+
+        <p className="mt-6 text-xs text-zinc-500">
+          No ETH needed — gas is paid in Mock USD via UGF
+        </p>
       </div>
     </section>
   );
