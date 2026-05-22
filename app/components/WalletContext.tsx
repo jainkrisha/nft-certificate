@@ -179,38 +179,41 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     value?: string;
     onHash?: (hash: string) => void;
   }) => {
-    if (!wrongNetwork) { await checkNetwork(); }
-    if (wrongNetwork) { throw new Error("Please switch to Base Sepolia before sending a gasless transaction."); }
-    if (!address)   { throw new Error("Connect your wallet first."); }
-
-    setTxPending(true);
     try {
+      if (!wrongNetwork) { await checkNetwork(); }
+      if (wrongNetwork) { throw new Error("Please switch to Base Sepolia before sending a gasless transaction."); }
+      if (!address)   { throw new Error("Connect your wallet first."); }
+
+      setTxPending(true);
       const signer = await new BrowserProvider(window.ethereum!).getSigner();
       const txObjectJson = buildTxObject({ from: await signer.getAddress(), to, data, value });
       const result: GaslessTxResult = await sendGaslessTx({ signer, txObjectJson });
       setLastTxHash(result.userTxHash);
       onHash?.(result.userTxHash);
+    } catch (err: any) {
+      console.error("Failed to send gasless tx:", err);
+      addToast(err.message || "Failed to send gasless tx", "error");
     } finally {
       setTxPending(false);
     }
-  }, [address, wrongNetwork, checkNetwork]);
+  }, [address, wrongNetwork, checkNetwork, addToast]);
 
   /* ── Claim certificate as gasless NFT ──────────────────────────────── */
   const claimCertificate = useCallback(
     async (onHash?: (hash: string) => void) => {
       const contractAddress = process.env.NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS;
 
-      if (!address) throw new Error("Connect your wallet first.");
-      if (!wrongNetwork) await checkNetwork();
-      if (wrongNetwork) throw new Error("Please switch to Base Sepolia first.");
-      if (!contractAddress) {
-        throw new Error(
-          "Certificate contract address is not configured yet. Ask the team to deploy and set NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS.",
-        );
-      }
-
-      setTxPending(true);
       try {
+        if (!address) throw new Error("Connect your wallet first.");
+        if (!wrongNetwork) await checkNetwork();
+        if (wrongNetwork) throw new Error("Please switch to Base Sepolia first.");
+        if (!contractAddress) {
+          throw new Error(
+            "Certificate contract address is not configured yet. Ask the team to deploy and set NEXT_PUBLIC_CERTIFICATE_CONTRACT_ADDRESS.",
+          );
+        }
+
+        setTxPending(true);
         const signer = await new BrowserProvider(window.ethereum!).getSigner();
         const signerAddress = await signer.getAddress();
         console.log("🎯 Claiming certificate for address:", signerAddress);
@@ -228,6 +231,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         setLastTxHash(result.userTxHash);
         addToast(`✨ Certificate successfully claimed! TX: ${result.userTxHash.slice(0, 10)}...`, "success", 7000);
         onHash?.(result.userTxHash);
+      } catch (err: any) {
+        console.error("Failed to claim certificate:", err);
+        addToast(err.message || "Failed to claim certificate", "error");
       } finally {
         setTxPending(false);
       }
