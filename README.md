@@ -6,7 +6,7 @@ A beginner-friendly gasless dApp built on Base Sepolia for the UGF Hackathon. St
 
 ## Live Demo
 
-🚀 **Vercel:** [Add your Vercel URL here after deployment]
+🚀 **Vercel:** (https://nft-certificate-5yrk.vercel.app/)
 
 📄 **Deployed Contract:** [0x5B1202D4cf17fcc362d939916eC1c638cf65B0fA](https://sepolia.basescan.org/address/0x5B1202D4cf17fcc362d939916eC1c638cf65B0fA)
 
