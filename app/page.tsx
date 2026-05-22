@@ -1,12 +1,15 @@
-import { Footer, Features, Hero, HowItWorks, Navbar } from "./components";
+import { Footer, Features, Hero, HowItWorks, LiveStatus, Navbar, FAQ, TrustBar } from "./components";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white font-sans">
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
       <Navbar />
       <Hero />
-      <Features />
+      <TrustBar />
       <HowItWorks />
+      <Features />
+      <LiveStatus />
+      <FAQ />
       <Footer />
     </div>
   );
