@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { createContext, useContext } from "react";
 import { BrowserProvider, formatEther } from "ethers";
 import { sendGaslessTx, buildTxObject, encodeSafeMint, type GaslessTxResult } from "@/lib/ugf";
+import type { ToastMessage } from "./Toast";
 
 /* ══ Ambient type augmentation ════════════════════════════════════════ */
 declare global {
@@ -28,6 +29,7 @@ type WalletContextType = {
   wrongNetwork: boolean;
   txPending: boolean;
   lastTxHash: string | null;
+  toasts: ToastMessage[];
   connect: () => Promise<void>;
   disconnect: () => void;
   switchNetwork: () => Promise<void>;
@@ -47,6 +49,7 @@ type WalletContextType = {
    * @param onHash — optional callback fired with the on-chain hash once confirmed
    */
   claimCertificate: (onHash?: (hash: string) => void) => Promise<void>;
+  removeToast: (id: string) => void;
 };
 
 const WalletContext = createContext<WalletContextType | null>(null);
@@ -59,6 +62,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const [txPending, setTxPending] = useState(false);
   const [lastTxHash, setLastTxHash] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  /* ── Toast helpers ────────────────────────────────────────────────── */
+  const addToast = useCallback((message: string, type: "success" | "error" | "info" = "info", duration = 5000) => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((prev) => [...prev, { id, message, type, duration }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   /* ── Balance ───────────────────────────────────────────────────────── */
   const fetchBalance = useCallback(async (addr: string) => {
@@ -137,10 +151,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       else { await switchNetwork().catch(() => setWrongNetwork(true)); }
     } catch (err) {
       console.error("Failed to connect wallet:", err);
+      addToast("Failed to connect wallet", "error");
     } finally {
       setIsConnecting(false);
     }
-  }, [checkNetwork, fetchBalance, handleAccountsChanged, switchNetwork]);
+  }, [checkNetwork, fetchBalance, handleAccountsChanged, switchNetwork, addToast]);
 
   /* ── Disconnect ────────────────────────────────────────────────────── */
   const disconnect = useCallback(() => {
@@ -197,21 +212,27 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setTxPending(true);
       try {
         const signer = await new BrowserProvider(window.ethereum!).getSigner();
+        const signerAddress = await signer.getAddress();
+        console.log("🎯 Claiming certificate for address:", signerAddress);
+        console.log("📋 Contract address:", contractAddress);
         const calldata = encodeSafeMint(address as `0x${string}`);
+        console.log("📝 Encoded calldata:", calldata);
         const txObjectJson = buildTxObject({
-          from: await signer.getAddress(),
+          from: signerAddress,
           to: contractAddress,
           data: calldata,
           value: "0",
         });
+        console.log("📦 TX Object JSON:", txObjectJson);
         const result: GaslessTxResult = await sendGaslessTx({ signer, txObjectJson });
         setLastTxHash(result.userTxHash);
+        addToast(`✨ Certificate successfully claimed! TX: ${result.userTxHash.slice(0, 10)}...`, "success", 7000);
         onHash?.(result.userTxHash);
       } finally {
         setTxPending(false);
       }
     },
-    [address, wrongNetwork, checkNetwork],
+    [address, wrongNetwork, checkNetwork, addToast],
   );
 
 
@@ -225,11 +246,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         wrongNetwork,
         txPending,
         lastTxHash,
+        toasts,
         connect,
         disconnect,
         switchNetwork,
         sendGaslessTx: sendGaslessTxWrapped,
         claimCertificate,
+        removeToast,
       }}
     >
       {children}
