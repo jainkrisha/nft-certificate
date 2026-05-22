@@ -116,6 +116,27 @@ export function Hero() {
               </div>
             </div>
           </div>
+          {lastTxHash && (
+            <div className="mt-6 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 px-6 py-5 text-sm shadow-[0_30px_80px_rgba(16,185,129,0.18)]">
+              <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Transaction Successful
+              </div>
+              <a
+                href={`https://sepolia.basescan.org/tx/${lastTxHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 text-emerald-300 transition-colors hover:text-emerald-100 hover:underline"
+              >
+                View on BaseScan
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+              </a>
+            </div>
+          )}
           <div className="mt-6 rounded-[2rem] border border-white/10 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 px-6 py-5 text-sm text-slate-300 shadow-[0_30px_80px_rgba(99,102,241,0.18)]">
             <p className="font-semibold text-white">Why it feels premium</p>
             <p className="mt-3 leading-7 text-slate-400">
